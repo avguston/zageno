@@ -1,0 +1,75 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: master-cluster
+spec:
+  dockerImage: registry.opensource.zalan.do/acid/spilo-13:2.0-p4
+  teamId: "acid"
+  numberOfInstances: 2
+  users:
+    zalando:
+    - superuser
+    - createdb
+  enableMasterLoadBalancer: false
+  enableReplicaLoadBalancer: false
+  enableConnectionPooler: false
+  enableReplicaConnectionPooler: false
+  allowedSourceRanges:
+  - 127.0.0.1/32
+  databases:
+    foo: zalando
+  preparedDatabases:
+    bar:
+      defaultUsers: true
+      extensions:
+        pg_partman: public
+        pgcrypto: public
+      schemas:
+        data: {}
+        history:
+          defaultRoles: true
+          defaultUsers: false
+  postgresql:
+    version: "13"
+    parameters:
+      shared_buffers: "32MB"
+      max_connections: "10"
+      log_statement: "all"
+  volume:
+    size: 1Gi
+  additionalVolumes:
+    - name: empty
+      mountPath: /opt/empty
+      targetContainers:
+        - all
+      volumeSource:
+        emptyDir: {}
+  enableShmVolume: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      cpu: 500m
+      memory: 500Mi
+  patroni:
+    initdb:
+      encoding: "UTF8"
+      locale: "en_US.UTF-8"
+      data-checksums: "true"
+    ttl: 30
+    loop_wait: &loop_wait 10
+    retry_timeout: 10
+    synchronous_mode: false
+    synchronous_mode_strict: false
+    maximum_lag_on_failover: 33554432
+  initContainers:
+  - name: date
+    image: busybox
+    command: [ "/bin/date" ]
+  tls:
+    secretName: ""
+    certificateFile: "tls.crt"
+    privateKeyFile: "tls.key"
+    caFile: ""
+    caSecretName: ""

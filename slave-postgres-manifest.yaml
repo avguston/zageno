@@ -1,0 +1,14 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: acid-standby-cluster
+  namespace: default
+spec:
+  teamId: "acid"
+  volume:
+    size: 1Gi
+  numberOfInstances: 1
+  postgresql:
+    version: "13"
+  standby:
+    s3_wal_path: <path to s3>
